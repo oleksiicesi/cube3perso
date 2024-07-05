@@ -5,13 +5,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $first_name = $_POST['first_name'];
     $last_name = $_POST['last_name'];
     $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $password = $_POST['password'];
 
-    $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$first_name, $last_name, $email, $password]);
+    $password_pattern = "/^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/";
 
-    header("Location: login.php");
-    exit;
+    if (!preg_match($password_pattern, $password)) {
+        $error_message = "Password must be at least 8 characters long and include at least one number and one special character.";
+    } else {
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$first_name, $last_name, $email, $password_hash]);
+
+        header("Location: login.php");
+        exit;
+    }
 }
 ?>
 
@@ -22,12 +30,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+        function validateForm() {
+            const password = document.getElementById("password").value;
+            const pattern = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+            if (!pattern.test(password)) {
+                alert("Password must be at least 8 characters long and include at least one number and one special character.");
+                return false;
+            }
+            return true;
+        }
+    </script>
 </head>
 <body>
     <?php include 'templates/header.php'; ?>
     <div class="container">
         <h2>Register</h2>
-        <form action="register.php" method="POST">
+        <?php if (isset($error_message)): ?>
+            <div class="flash"><?php echo htmlspecialchars($error_message); ?></div>
+        <?php endif; ?>
+        <form action="register.php" method="POST" onsubmit="return validateForm();">
             <label for="first_name">First Name</label>
             <input type="text" id="first_name" name="first_name" required>
 
@@ -40,10 +62,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required>
 
-            <input type="submit" value="Register">
+            <button type="submit">Register</button>
         </form>
     </div>
     <?php include 'templates/footer.php'; ?>
 </body>
 </html>
-

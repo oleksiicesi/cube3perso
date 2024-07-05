@@ -35,7 +35,7 @@ function initializeDatabase($pdo) {
     $adminUsers = [
         [
             'email' => 'admin@healthplus.com',
-            'password' => password_hash('admin', PASSWORD_DEFAULT),
+            'password' => password_hash('admin1409!', PASSWORD_DEFAULT),
             'first_name' => 'Adam',
             'last_name' => 'Smith'
         ],
